@@ -31,8 +31,10 @@ from Bio.PDB import *
 IC50_cutoff = 10000 # nM
 NHGD_cutoff = 4     # A
 BATCH_SIZE  = 512   # PDBs
-max_ptn_sz  = 10000 # atoms
-min_ptn_sz  = 500   # atoms
+# max_ptn_sz  = 10000 # atoms
+max_ptn_sz  = 100000000000000 # atoms
+# min_ptn_sz  = 500   # atoms
+min_ptn_sz  = 0   # atoms
 
 
 ############################################################
@@ -355,7 +357,7 @@ if __name__ == "__main__":
     for pdbid in proteins:
         if pdbid not in rejected:
             accepted[pdbid] = proteins[pdbid]
-    stats = write_map_file(ligands,accepted)
+    stats = write_map_file(ligands,accepted, outdir=args.out) # CHANGED
     # Get some stats / distributions.
     bind = 0
     nobind = 0

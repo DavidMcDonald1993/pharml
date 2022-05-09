@@ -31,8 +31,8 @@ from __future__ import division
 from __future__ import print_function
 import tensorflow as tf
 import sonnet as snt
-import networkx as nx
-import graph_nets as gn
+# import networkx as nx
+# import graph_nets as gn
 from graph_nets import utils_np
 from graph_nets import utils_tf
 import gnn_models as models
@@ -41,6 +41,8 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import os
+# os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
+# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import sys
 import time
 import argparse
@@ -67,6 +69,9 @@ RANKS = 1
 BATCH_SIZE=1
 BATCH_SIZE_TEST=1
 PRINT_EVERY = 1
+
+# added
+DISTRIBUTED = False
 ############################################################
 
 
@@ -214,6 +219,7 @@ def run_batches(sess, batch_generator, input_p_ph, input_l_ph, target_ph, input_
             plpps = float(examples_seen)/elapsed_time
             
             if DISTRIBUTED:
+            # if args.hvd:
                 import horovod.tensorflow as hvd
                 avg_plpps = tf.cast(plpps,tf.float32)
                 avg_plpps_op = hvd.allreduce(avg_plpps)
@@ -278,7 +284,9 @@ def parse_args():
     parser = argparse.ArgumentParser(prog='ML-Dock-GN using Tensorflow + graph_nets Backend', description='Processing input flags for Training Run.')
     parser.add_argument('--batch_size', type=int, default=4, help='The (local) minibatch size used in training.')
     parser.add_argument('--batch_size_test', type=int, default=8, help='The (local) minibatch size used in testing.')
-    parser.add_argument('--map_train', type=str, required=True, help='Path to .map file for training set.')
+    parser.add_argument('--map_train', type=str, 
+        required=True,
+        help='Path to .map file for training set.')
     parser.add_argument('--map_test', type=str, required=True, help='Path to .map file for test set.')
     parser.add_argument('--epochs', type=int, default=100, help='Number of epochs to train.')
     parser.add_argument('--mlp_layers', type=str, default="4,4", help='Number of layers in each MLP.')
@@ -305,7 +313,8 @@ def parse_args():
     DTYPE = tf.float16 if args.use_fp16 else tf.float32
     BATCH_SIZE=args.batch_size
     BATCH_SIZE_TEST=args.batch_size_test
-    print(args)
+    DISTRIBUTED = args.hvd
+
     if args.hvd:
         print("Starting horovod...")
         import horovod.tensorflow as hvd
@@ -440,7 +449,10 @@ def run_gnn(args,model_ops,test_items,train_items=None,optimizer=None):
     inputs_p_ph, inputs_l_ph, targets_ph, inputs_p_op, inputs_l_op, targets_op, output_ops, loss_op, step_op = model_ops
     # Create new TF session.
     banner_print("Create TF config / session.")
-    config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
+    config = tf.ConfigProto(
+        allow_soft_placement=True, 
+        log_device_placement=False,
+    )
     config.gpu_options.allow_growth = True
     if args.hvd:
         import horovod.tensorflow as hvd
@@ -584,7 +596,8 @@ def run_gnn(args,model_ops,test_items,train_items=None,optimizer=None):
         if INFERENCE_ONLY:
             # Exit loop after first inference if in inference only-mode.
             print("Inference only mode, done with single pass so exiting...")
-            hvd.shutdown()
+            if args.hvd:
+                hvd.shutdown()
             break;
 
         # If test accuracy has not improved for more than 
@@ -594,7 +607,8 @@ def run_gnn(args,model_ops,test_items,train_items=None,optimizer=None):
         if( (epoch-epoch_best) >= 15 and not INFERENCE_ONLY):
             print("Model Converged! Exiting Nicely...")
             #sys.exit(0)
-            hvd.shutdown()
+            if args.hvd:
+                hvd.shutdown()
             break;
             
     # Success!
@@ -621,6 +635,7 @@ def main():
     else:
         optimizer, step_op = build_optimizer(args,ops[-1],len(train))
         ops += (step_op,)
+    
     # Run the training / inference loop.
     run_gnn(args, ops, test, train_items=train, optimizer=optimizer)
 

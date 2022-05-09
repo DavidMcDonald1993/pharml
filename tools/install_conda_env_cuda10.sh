@@ -20,7 +20,7 @@ export PATH=${MPI_PATH}/bin:${PATH}
 export cc=${MPI_PATH}/bin/mpicc
 export CC=${MPI_PATH}/bin/mpicxx
 export CUDNN_PATH=/cray/css/users/&{USER}/Tools/CuDNN/cudnn-10.0-v742/cuda
-export TOOLS=/cray/css/users/&{USER}/Tools
+export TOOLS=/cray/css/users/${USER}/Tools
 export CUDATOOLKIT_HOME=/global/opt/nvidia/cudatoolkit/10.0
 export LD_LIBRARY_PATH=${MPI_PATH}/lib:${CUDNN_PATH}/lib64:${CUDATOOLKIT_HOME}/lib64:${CRAY_LD_LIBRARY_PATH}:${LD_LIBRARY_PATH}
 
@@ -38,6 +38,3 @@ conda install -y -c conda-forge rdkit biopython scipy dask
 pip install tensorflow-gpu==1.15 graph_nets dm-sonnet==1.25 tensorflow-probability
 
 #When this finishes, run ./install_horovod_python3_cs.sh
-
-
-
