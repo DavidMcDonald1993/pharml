@@ -1,13 +1,11 @@
 #!/bin/bash
 
 #SBATCH --job-name=PHARML
-#SBATCH --output=PHARML
-#SBATCH --error=PHARML
-
+#SBATCH --output=PHARML.out
+#SBATCH --error=PHARML.err
 #SBATCH --qos bbgpu
 #SBATCH --account hesz01
 #SBATCH --gres gpu:p100:1
-
 #SBATCH --time=10-00:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -15,7 +13,6 @@
 #SBATCH --mem=20G
 
 module purge; module load bluebear
-# module load Miniconda3/4.9.2
 module load TensorFlow/1.15.0-fosscuda-2019b-Python-3.7.4
 module load matplotlib/3.1.1-fosscuda-2019b-Python-3.7.4
 
@@ -29,8 +26,14 @@ pip install --user dm-sonnet==1.25\
 TRAINING_MAP=data/bindingdbsubset/map/dataset.map
 TEST_MAP=data/dude/map/dataset.map
 
-BATCH_SIZE=1
+LR0=0.000000001
+MLP_LATENT=32,32
+MLP_LAYERS=2,2
+GNN_LAYERS=5,5
+NUM_FEATURES=16,16
+MODE=classification
 EPOCHS=1
+BATCH_SIZE=5
 DATA_THREADS=2
 
 MODEL_PATH="checkpoints/model0.ckpt"
@@ -51,6 +54,8 @@ INFERENCE_OUT="bindingdb-test-inference.out"
 # gnn_model_ligand_core6: [29, 24, 20, 15, 24, 29]
 # gnn_model_ligand_core7: [32, 27, 23, 19, 23, 27, 32]
 
+# new architecture
+
 python pharML-Bind/mldock_gnn.py \
     --map_train ${TRAINING_MAP} \
     --map_test ${TEST_MAP} \
@@ -58,6 +63,9 @@ python pharML-Bind/mldock_gnn.py \
     --restore ${MODEL_PATH} \
     --batch_size ${BATCH_SIZE} \
     --batch_size_test ${BATCH_SIZE} \
+    --mlp_latent ${MLP_LATENT} \
+    --mlp_layers ${MLP_LAYERS} \
+    --gnn_layers ${GNN_LAYERS} \
     --data_threads ${DATA_THREADS}\
     --epochs ${EPOCHS} \
     --inference_out ${INFERENCE_OUT} 
