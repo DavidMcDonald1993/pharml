@@ -1,12 +1,37 @@
 #!/bin/bash
 
-export LD_LIBRARY_PATH=${HOME}/miniconda/envs/pharml-env-cuda:${LD_LIBRARY_PATH}
+#SBATCH --job-name=PHARML
+#SBATCH --output=PHARML
+#SBATCH --error=PHARML
+
+#SBATCH --qos bbgpu
+#SBATCH --account hesz01
+#SBATCH --gres gpu:p100:1
+
+#SBATCH --time=10-00:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=5
+#SBATCH --mem=20G
+
+module purge; module load bluebear
+# module load Miniconda3/4.9.2
+module load TensorFlow/1.15.0-fosscuda-2019b-Python-3.7.4
+module load matplotlib/3.1.1-fosscuda-2019b-Python-3.7.4
+
+pip install --user dm-sonnet==1.25\
+    graph-nets\
+    tensorflow-probability==0.7.0
+
+# probably not needed on BlueBEAR? 
+# export LD_LIBRARY_PATH=${HOME}/miniconda/envs/pharml-env-cuda:${LD_LIBRARY_PATH}
 
 TRAINING_MAP=data/bindingdbsubset/map/dataset.map
 TEST_MAP=data/dude/map/dataset.map
 
 BATCH_SIZE=1
 EPOCHS=1
+DATA_THREADS=2
 
 MODEL_PATH="checkpoints/model0.ckpt"
 
@@ -33,5 +58,6 @@ python pharML-Bind/mldock_gnn.py \
     --restore ${MODEL_PATH} \
     --batch_size ${BATCH_SIZE} \
     --batch_size_test ${BATCH_SIZE} \
+    --data_threads ${DATA_THREADS}\
     --epochs ${EPOCHS} \
     --inference_out ${INFERENCE_OUT} 
