@@ -12,16 +12,16 @@
 #SBATCH --cpus-per-task=5
 #SBATCH --mem=20G
 
-module purge; module load bluebear
-module load TensorFlow/1.15.0-fosscuda-2019b-Python-3.7.4
-module load matplotlib/3.1.1-fosscuda-2019b-Python-3.7.4
+# module purge; module load bluebear
+# module load TensorFlow/1.15.0-fosscuda-2019b-Python-3.7.4
+# module load matplotlib/3.1.1-fosscuda-2019b-Python-3.7.4
 
-pip install --user dm-sonnet==1.25\
-    graph-nets\
-    tensorflow-probability==0.7.0
+# pip install --user dm-sonnet==1.25\
+#     graph-nets\
+#     tensorflow-probability==0.7.0
 
 # probably not needed on BlueBEAR? 
-# export LD_LIBRARY_PATH=${HOME}/miniconda/envs/pharml-env-cuda:${LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH=${HOME}/miniconda/envs/pharml-env-cuda:${LD_LIBRARY_PATH}
 
 TRAINING_MAP=data/bindingdbsubset/map/dataset.map
 TEST_MAP=data/dude/map/dataset.map
@@ -33,12 +33,15 @@ GNN_LAYERS=5,5
 NUM_FEATURES=16,16
 MODE=classification
 EPOCHS=1
-BATCH_SIZE=5
-DATA_THREADS=2
+BATCH_SIZE=1
+# BATCH_SIZE=5
+DATA_THREADS=10
 
-MODEL_PATH="checkpoints/model0.ckpt"
+MODEL_DIR="checkpoints" 
+mkdir -p $MODEL_DIR
+MODEL_PATH="$MODEL_DIR/model0.ckpt"
 
-INFERENCE_OUT="bindingdb-test-inference.out"
+INFERENCE_OUT="dude-inference-2"
 
 # default architecture
 # gnn_model_protein_core0: [32, 23, 15, 32]
@@ -55,11 +58,21 @@ INFERENCE_OUT="bindingdb-test-inference.out"
 # gnn_model_ligand_core7: [32, 27, 23, 19, 23, 27, 32]
 
 # new architecture
+# gnn_model_protein_core0: [32, 7]
+# gnn_model_protein_core1: [40, 9]
+# gnn_model_protein_core2: [48, 29, 48]
+# gnn_model_protein_core3: [56, 41, 27, 56]
+# gnn_model_protein_core4: [64, 51, 39, 51, 64]
+# gnn_model_ligand_core0: [32, 7]
+# gnn_model_ligand_core1: [40, 9]
+# gnn_model_ligand_core2: [48, 29, 48]
+# gnn_model_ligand_core3: [56, 41, 27, 56]
+# gnn_model_ligand_core4: [64, 51, 39, 51, 64]
 
 python pharML-Bind/mldock_gnn.py \
     --map_train ${TRAINING_MAP} \
     --map_test ${TEST_MAP} \
-    --mode classification \
+    --mode ${MODE} \
     --restore ${MODEL_PATH} \
     --batch_size ${BATCH_SIZE} \
     --batch_size_test ${BATCH_SIZE} \
@@ -68,4 +81,5 @@ python pharML-Bind/mldock_gnn.py \
     --gnn_layers ${GNN_LAYERS} \
     --data_threads ${DATA_THREADS}\
     --epochs ${EPOCHS} \
-    --inference_out ${INFERENCE_OUT} 
+    --inference_out ${INFERENCE_OUT} #\
+    # --inference_only True
