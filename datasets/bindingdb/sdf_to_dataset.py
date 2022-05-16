@@ -279,6 +279,7 @@ def convert_pdb(pdbid,outdir="data/"):
         for ndx in neighborhoods[0]:
             local_nh_sizes[ndx] += 1
         if min(local_nh_sizes.values()) < 3:
+        # if min(local_nh_sizes.values()) < 2: # TODO CHANGED
             raise Exception('Too few local edges (%d)!'%(min(local_nh_sizes.values())))
         status += "Neighborhood graph info:\n"
         status += "  Total edges: %d"%(len(nh_edges))

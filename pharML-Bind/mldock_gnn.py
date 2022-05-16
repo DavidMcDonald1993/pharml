@@ -485,15 +485,15 @@ def run_gnn(args,model_ops,test_items,train_items=None,optimizer=None):
     model_path = checkpoint_dir + '/model%s.ckpt'%RANK
     restore_path = model_path
     
-    if RANK==0:
-        # Test Save / Restore model with Rank 0.
-        save_path = saver.save(sess, model_path)
-        print("Coordinator Test checkpoint saved to: %s"%save_path)
-    else:
-        save_path = saver.save(sess, model_path)
-        print("Worker test checkpoint saved to: %s"%save_path)
+    # if RANK==0:
+    #     # Test Save / Restore model with Rank 0.
+    #     save_path = saver.save(sess, model_path)
+    #     print("Coordinator Test checkpoint saved to: %s"%save_path)
+    # else:
+    #     save_path = saver.save(sess, model_path)
+    #     print("Worker test checkpoint saved to: %s"%save_path)
 
-    
+
     if args.restore != None:
         restore_path = args.restore
         print("Restoring model from: %s"%restore_path)

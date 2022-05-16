@@ -122,8 +122,9 @@ local.py
 
 .vscode
 
-/checkpoints
+/checkpoints*
 /data
+/output
 
 /*.sdf
 /*.txt
